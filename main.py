@@ -4,6 +4,10 @@ import os
 from requests_oauthlib import OAuth1Session
 import json
 import re
+import random
+# TODO logger 
+# TODO error handling throughout
+# TODO better copy
 
 def load_env(): 
   from dotenv import load_dotenv
@@ -20,6 +24,8 @@ def get_api_client():
 def get_mentions(client, last_mention_id):
 
   mentions_endpoint = 'https://api.twitter.com/1.1/statuses/mentions_timeline.json'
+
+  # since_id Returns results with an ID greater than (that is, more recent than) the specified ID
   params = {"since_id" : str(last_mention_id)}
 
   #TODO error handling
@@ -66,12 +72,16 @@ def smilify_url(url):
 
 def reply_to_mention(client, mention_id, username, smilified_urls):
 
+    zero_link_replies = ["Hmmm I couldn't find an Amazon link above...😳. So here's my homepage, friend 💛 smile.amazon.com"]
+    one_link_replies = ["Yes, spot on. Here's your Smile link, friend 💛 ", "I'm HERE for this. Smile links FTW. Here ya go 💛 ", "I concur. You get a Smile link, you get a Smile link. Everyone gets a Smile link 💛", "What a time to be alive. Here's your Smile link, friend 💛 "]
+    multi_link_replies = ["WOAH! Multi-link combo action. Here are your Smile links, friend 💛 "]
+
     if(len(smilified_urls) == 0):
-      text = "@" + username + " couldn't find an amazon link above... so here's smile.amazon.com"
+      text = "@" + username + " " + random.choice(zero_link_replies)
     elif(len(smilified_urls) == 1):
-      text = "@" + username + " here's your link " + smilified_urls[0]
+      text = "@" + username + " " + random.choice(one_link_replies) + smilified_urls[0]
     else:
-      text = "@" + username + " here are your links: "
+      text = "@" + username + " " + random.choice(multi_link_replies)
       for s_url in smilified_urls:
         text += s_url + ', '
       text = text[:-2]  
@@ -79,13 +89,13 @@ def reply_to_mention(client, mention_id, username, smilified_urls):
     print('------- Replying - smilified_urls is '+ str(smilified_urls))
     print('------- Replying with tweet text: '+ text + '\n')
 
-    # response = send_tweet(client, text, mention_id)
+    response = send_tweet(client, text, mention_id)
 
-    # if("errors" in response):
-    #   print('------- Completed with error: ')
-    #   print(response)
-    # else:
-    #   print('------- Completed successfully, reply tweet id is: ' + str(response["id"]))
+    if("errors" in response):
+      print('------- Completed with error: ')
+      print(response)
+    else:
+      print('------- Completed successfully, reply tweet id is: ' + str(response["id"]))
 
 def get_amzn_urls_from_tweet(tweet):
 
@@ -116,16 +126,40 @@ def get_smilified_urls_from_amzn_urls(amzn_urls):
 
   return smilified_urls
 
+def get_oldest_mention_id_processed():
+  oldest_mention_id_processed = 1
+  file = open('oldest_mention_id.txt', 'r+')
+  oldest_mention_id_processed = file.read()
+  file.close()
+  return oldest_mention_id_processed
+
+
+def save_oldest_mention_id_processed(oldest_mention_id_processed):
+  file = open('oldest_mention_id.txt', 'w')
+  file.truncate(0)
+  file.write(str(oldest_mention_id_processed))
+  file.close()
+
 def main():
 
-  # TODO: Save the last mention ID in file
-  mentions = get_mentions(client,1)
+  # Get oldest mention id processed
+  oldest_mention_id_processed = get_oldest_mention_id_processed()
+
+  print("oldest_mention_id_processed is " + str(oldest_mention_id_processed))
+
+  mentions = get_mentions(client,oldest_mention_id_processed)
+  
+  # Mentions API returns most recent first. We want to process oldest first. 
+  mentions.reverse()
 
   for mention in mentions:
     mention_id = mention["id_str"]
+    oldest_mention_id_processed = mention_id
     
     print("\n\n---- PROCESSING MENTION ID: " + mention_id )
     
+    print("\n\n---- CREATED AT : " + mention["created_at"] )
+
     if(mention["in_reply_to_user_id_str"]=="1275106249047265292"):
       print("------- Mention is to self... SKIPPING")  
       continue
@@ -168,6 +202,9 @@ def main():
     smilified_urls = list( dict.fromkeys(smilified_urls) )
     
     reply_to_mention(client, mention_id, username, smilified_urls)
+
+  print("\n\n Saving oldest_mention_id_processed " + oldest_mention_id_processed)
+  save_oldest_mention_id_processed(oldest_mention_id_processed)
 
 if __name__ == "__main__":
     load_env()
