@@ -79,13 +79,13 @@ def reply_to_mention(client, mention_id, username, smilified_urls):
     print('------- Replying - smilified_urls is '+ str(smilified_urls))
     print('------- Replying with tweet text: '+ text + '\n')
 
-    response = send_tweet(client, text, mention_id)
+    # response = send_tweet(client, text, mention_id)
 
-    if("errors" in response):
-      print('------- Completed with error: ')
-      print(response)
-    else:
-      print('------- Completed successfully, reply tweet id is: ' + str(response["id"]))
+    # if("errors" in response):
+    #   print('------- Completed with error: ')
+    #   print(response)
+    # else:
+    #   print('------- Completed successfully, reply tweet id is: ' + str(response["id"]))
 
 def get_amzn_urls_from_tweet(tweet):
 
@@ -122,12 +122,16 @@ def main():
   mentions = get_mentions(client,1)
 
   for mention in mentions:
-    mention_id = mention['id_str']
+    mention_id = mention["id_str"]
     
+    print("\n\n---- PROCESSING MENTION ID: " + mention_id )
+    
+    if(mention["in_reply_to_user_id_str"]=="1275106249047265292"):
+      print("------- Mention is to self... SKIPPING")  
+      continue
+
     # Have to do this to get the labs v2 version of the tweet with unwound urls
     mention_tweet = get_tweet(client, mention_id)
-
-    print("\n\n---- PROCESSING MENTION ID: " + mention_id )
 
     username =  mention['user']['screen_name']
     print("------- username that wrote mention is : " + username )
