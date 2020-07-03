@@ -243,6 +243,7 @@ if __name__ == "__main__":
     
     starttime = time.time()
 
+    # https://stackoverflow.com/a/25251804
     while True:
       logging.debug("tick")
       main()
