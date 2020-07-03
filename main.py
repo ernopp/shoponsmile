@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 
 import os
+import sys
 from requests_oauthlib import OAuth1Session
 import json
 import re
 import random
-# TODO logger 
+import coloredlogs, logging
+import time
+
 # TODO error handling throughout
-# TODO better copy
 
 def load_env(): 
   from dotenv import load_dotenv
   load_dotenv()
+
+  coloredlogs.install(level='INFO')
 
 def get_api_client():
 
@@ -28,7 +32,6 @@ def get_mentions(client, last_mention_id):
   # since_id Returns results with an ID greater than (that is, more recent than) the specified ID
   params = {"since_id" : str(last_mention_id)}
 
-  #TODO error handling
   response = client.get(mentions_endpoint, params = params)
 
   return json.loads(response.content)
@@ -39,10 +42,9 @@ def get_tweet(client, id):
   
   params = {"ids": id, "tweet.fields": "text,created_at,attachments,entities", "media.fields": "url", "expansions": "attachments.poll_ids,attachments.media_keys,author_id,entities.mentions.username,geo.place_id,in_reply_to_user_id,referenced_tweets.id,referenced_tweets.id.author_id", "user.fields" : "username"}
 
-  #TODO error handling
   response = client.get(statuses_endpoint, params = params)
 
-  # print(json.loads(response.content))
+  # logging.debug(json.loads(response.content))
 
   return json.loads(response.content)
 
@@ -53,11 +55,13 @@ def send_tweet(client, text, in_reply_to_status_id):
 
   response = client.post(send_tweet_endpoint, params = params)
 
-  # print(response.content)
+  logging.error("Unexpected error in get_oldest_mention_id_processed: " + sys.exc_info()[0]) 
+
+  # logging.debug(response.content)
   return json.loads(response.content)
 
 def smilify_url(url):
-    # print('aiming to transform url ' + url )
+    # logging.debug('aiming to transform url ' + url )
 
     # https://regex101.com/
     regex = r"(https?:\/\/(.+?\.)?amazon\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)"
@@ -86,16 +90,16 @@ def reply_to_mention(client, mention_id, username, smilified_urls):
         text += s_url + ', '
       text = text[:-2]  
 
-    print('------- Replying - smilified_urls is '+ str(smilified_urls))
-    print('------- Replying with tweet text: '+ text + '\n')
+    logging.debug('------- Replying - smilified_urls is '+ str(smilified_urls))
+    logging.debug('------- Replying with tweet text: '+ text + '\n')
 
     response = send_tweet(client, text, mention_id)
 
     if("errors" in response):
-      print('------- Completed with error: ')
-      print(response)
+      logging.error('------- Completed with error: ')
+      logging.error(response)
     else:
-      print('------- Completed successfully, reply tweet id is: ' + str(response["id"]))
+      logging.info('------- Completed successfully, reply tweet id is: ' + str(response["id"]))
 
 def get_amzn_urls_from_tweet(tweet):
 
@@ -109,7 +113,7 @@ def get_amzn_urls_from_tweet(tweet):
           if(not "unwound_url" in url):
             break
 
-          print("-------------- unwound url is " + url['unwound_url'])
+          logging.debug("-------------- unwound url is " + url['unwound_url'])
           amzn_urls.append(url['unwound_url'])
 
   return amzn_urls
@@ -122,98 +126,132 @@ def get_smilified_urls_from_amzn_urls(amzn_urls):
     smilified_url = smilify_url(u)
     if(smilified_url['success']):
       smilified_urls.append(smilified_url['smilified_url'])
-      print('----------------------------new smile url is ' + smilified_url['smilified_url'])
+      logging.debug('----------------------------new smile url is ' + smilified_url['smilified_url'])
 
   return smilified_urls
 
 def get_oldest_mention_id_processed():
-  oldest_mention_id_processed = 1
-  file = open('oldest_mention_id.txt', 'r+')
-  oldest_mention_id_processed = file.read()
-  file.close()
-  return oldest_mention_id_processed
 
+  try: 
+    oldest_mention_id_processed = 1
+    file = open('oldest_mention_id.txt', 'r+')
+    oldest_mention_id_processed = file.read()
+    file.close()
+    return oldest_mention_id_processed
+
+  except:
+    logging.error("Unexpected error in get_oldest_mention_id_processed: " + sys.exc_info()[0]) 
 
 def save_oldest_mention_id_processed(oldest_mention_id_processed):
-  file = open('oldest_mention_id.txt', 'w')
-  file.truncate(0)
-  file.write(str(oldest_mention_id_processed))
-  file.close()
+  
+  try: 
+    # a+ opens if doesnt exist
+    file = open('oldest_mention_id.txt', 'a+') 
+    file.truncate(0)
+    file.write(str(oldest_mention_id_processed))
+    file.close()
+
+  except:
+    logging.error("Unexpected error in save_oldest_mention_id_processed: " + sys.exc_info()[0]) 
 
 def main():
 
-  # Get oldest mention id processed
-  oldest_mention_id_processed = get_oldest_mention_id_processed()
+  try:
+    # Get oldest mention id processed
+    oldest_mention_id_processed = get_oldest_mention_id_processed()
 
-  print("oldest_mention_id_processed is " + str(oldest_mention_id_processed))
+    logging.info("oldest_mention_id_processed is " + str(oldest_mention_id_processed))
 
-  mentions = get_mentions(client,oldest_mention_id_processed)
-  
-  # Mentions API returns most recent first. We want to process oldest first. 
-  mentions.reverse()
-
-  for mention in mentions:
-    mention_id = mention["id_str"]
-    oldest_mention_id_processed = mention_id
+    mentions = get_mentions(client,oldest_mention_id_processed)
     
-    print("\n\n---- PROCESSING MENTION ID: " + mention_id )
-    
-    print("\n\n---- CREATED AT : " + mention["created_at"] )
+    # Mentions API returns most recent first. We want to process oldest first. 
+    mentions.reverse()
 
-    if(mention["in_reply_to_user_id_str"]=="1275106249047265292"):
-      print("------- Mention is to self... SKIPPING")  
-      continue
+    for mention in mentions:
 
-    # Have to do this to get the labs v2 version of the tweet with unwound urls
-    mention_tweet = get_tweet(client, mention_id)
+      mention_id = mention["id_str"]
+      oldest_mention_id_processed = mention_id
+      
+      logging.debug("\n\n---- PROCESSING MENTION ID: " + mention_id )
+      
+      logging.debug("\n\n---- CREATED AT : " + mention["created_at"] )
 
-    username =  mention['user']['screen_name']
-    print("------- username that wrote mention is : " + username )
+      if(mention["in_reply_to_user_id_str"]=="1275106249047265292"):
+        logging.debug("------- Mention is to self... SKIPPING")  
+        continue
 
-    print("------- mention text: " + mention['text'])
+      # Have to do this to get the labs v2 version of the tweet with unwound urls
+      mention_tweet = get_tweet(client, mention_id)
 
-    smilified_urls = []
-    
-    original_tweet_id = mention['in_reply_to_status_id_str']
-    
-    if(original_tweet_id):
-    
-      #MENTION IS IN REPLY TO A TWEET
-    
-      print("------- mention is reply to original tweet id:  " + original_tweet_id)
+      username =  mention['user']['screen_name']
+      logging.debug("------- username that wrote mention is : " + username )
 
-      original_tweet = get_tweet(client, original_tweet_id)
+      logging.debug("------- mention text: " + mention['text'])
 
-      print("------- original tweet text is:  " + original_tweet["data"][0]["text"])
+      smilified_urls = []
+      
+      original_tweet_id = mention['in_reply_to_status_id_str']
+      
+      if(original_tweet_id):
+      
+        #MENTION IS IN REPLY TO A TWEET
+      
+        logging.debug("------- mention is reply to original tweet id:  " + original_tweet_id)
 
-      # GET AMAZON TWEETS FROM ORIGINAL TWEET
-      original_tweet_amzn_urls = get_amzn_urls_from_tweet(original_tweet)
-      print("------- found " + str(len(original_tweet_amzn_urls)) + " amzn links in original tweet")
-      smilified_urls += get_smilified_urls_from_amzn_urls(original_tweet_amzn_urls)
-           
-    else:
-      print('-------mention was not a reply to a tweet')
+        original_tweet = get_tweet(client, original_tweet_id)
 
-      mention_amzn_urls = get_amzn_urls_from_tweet(mention_tweet)
-      print("------- found " + str(len(mention_amzn_urls)) + " amzn links in mention tweet")
-      smilified_urls += get_smilified_urls_from_amzn_urls(mention_amzn_urls)
+        logging.debug("------- original tweet text is:  " + original_tweet["data"][0]["text"])
 
-    #dedupe
-    smilified_urls = list( dict.fromkeys(smilified_urls) )
-    
-    reply_to_mention(client, mention_id, username, smilified_urls)
+        # GET AMAZON TWEETS FROM ORIGINAL TWEET
+        original_tweet_amzn_urls = get_amzn_urls_from_tweet(original_tweet)
+        logging.debug("------- found " + str(len(original_tweet_amzn_urls)) + " amzn links in original tweet")
+        smilified_urls += get_smilified_urls_from_amzn_urls(original_tweet_amzn_urls)
+            
+      else:
+        logging.debug('-------mention was not a reply to a tweet')
 
-  print("\n\n Saving oldest_mention_id_processed " + oldest_mention_id_processed)
-  save_oldest_mention_id_processed(oldest_mention_id_processed)
+        mention_amzn_urls = get_amzn_urls_from_tweet(mention_tweet)
+        logging.debug("------- found " + str(len(mention_amzn_urls)) + " amzn links in mention tweet")
+        smilified_urls += get_smilified_urls_from_amzn_urls(mention_amzn_urls)
+
+      #dedupe
+      smilified_urls = list( dict.fromkeys(smilified_urls) )
+      
+      reply_to_mention(client, mention_id, username, smilified_urls)
+
+    logging.info("\n\n Saving oldest_mention_id_processed " + oldest_mention_id_processed)
+    save_oldest_mention_id_processed(oldest_mention_id_processed)
+
+  except Exception as e:
+    logging.error(e, exc_info=True)
+
+def test_exceptions():
+  test= {"asd", 123}
+
+  try:
+    print(test["1414"])
+  except Exception as e:
+  #   print("error")
+  #   traceback.print_exc()
+    logging.error(e, exc_info=True)
+
+    # logging.error('Caught an error' , sys.exc_info()[0])
 
 if __name__ == "__main__":
     load_env()
     client = get_api_client()
-    main()
+    
+    starttime = time.time()
+
+    while True:
+      logging.debug("tick")
+      main()
+      time.sleep(60.0 - ((time.time() - starttime) % 60.0))
 
     # send_tweet(client,"@ernopp testingasdasd123 https://www.smile.amazon.com/dp/1442265639/ref=cm_sw_r_cp_api_i_ze19Eb5DRNN42", '1273945165217124352')
 
-    # print(smilify_url('https://www.amazon.com/dp/1442265639/ref=cm_sw_r_cp_api_i_ze19Eb5DRNN42'))
+    # logging.debug(smilify_url('https://www.amazon.com/dp/1442265639/ref=cm_sw_r_cp_api_i_ze19Eb5DRNN42'))
 
     # t = get_tweet(client, '1276631955132407808')
-    # print(t)
+    # logging.debug(t)
+
