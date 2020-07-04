@@ -13,7 +13,7 @@ from dotenv import load_dotenv # https://pypi.org/project/python-dotenv/
 def load_env(): 
   load_dotenv()
 
-  coloredlogs.install(level='DEBUG')
+  coloredlogs.install(level=os.getenv("LOGLEVEL"))
 
 def get_api_client():
 
