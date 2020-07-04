@@ -20,6 +20,12 @@ This code is bad (and I feel bad) so please feel free to contribute!
 
 `Procfile` tells heroku what to run.
 
+**!!! Copy the last mention ID that was processed into `oldest_mention_id.txt` !!!**
+
+Then
+
+(need to fix this)
+
 ```
 git push heroku master
 ```
