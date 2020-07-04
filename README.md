@@ -35,3 +35,11 @@ Then don't forget to scale up the dyno:
 ```
 heroku ps:scale worker=1
 ```
+
+## Debug
+
+Get logs
+
+```
+heroku logs --tail
+```
