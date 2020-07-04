@@ -10,11 +10,6 @@ import coloredlogs, logging
 import time
 from dotenv import load_dotenv # https://pypi.org/project/python-dotenv/
 
-def load_env(): 
-  load_dotenv()
-
-  coloredlogs.install(level=os.getenv("LOGLEVEL"))
-
 def get_api_client():
 
   oauth = OAuth1Session(os.getenv("CONSUMER_KEY"),
@@ -28,8 +23,7 @@ def get_mentions(client, last_mention_id):
   mentions_endpoint = 'https://api.twitter.com/1.1/statuses/mentions_timeline.json'
 
   # since_id Returns results with an ID greater than (that is, more recent than) the specified ID
-  # params = {"since_id" : str(last_mention_id)}
-  params = {"since_id" : "1279115660828819457"}
+  params = {"since_id" : str(last_mention_id)}
 
   response = client.get(mentions_endpoint, params = params)
 
@@ -158,7 +152,7 @@ def main():
 
     logging.info("oldest_mention_id_processed is " + str(oldest_mention_id_processed))
 
-    mentions = get_mentions(client,oldest_mention_id_processed)
+    mentions = get_mentions(client, oldest_mention_id_processed)
     
     # Mentions API returns most recent first. We want to process oldest first. 
     mentions.reverse()
@@ -168,7 +162,7 @@ def main():
       mention_id = mention["id_str"]
       oldest_mention_id_processed = mention_id
       
-      logging.debug("\n\n---- PROCESSING MENTION ID: " + mention_id )
+      logging.info("\n\n---- PROCESSING MENTION ID: " + mention_id )
       
       logging.debug("\n\n---- CREATED AT : " + mention["created_at"] )
 
@@ -234,7 +228,11 @@ def main():
 #     # logging.error('Caught an error' , sys.exc_info()[0])
 
 if __name__ == "__main__":
-    load_env()
+    load_dotenv()
+    
+    coloredlogs.install(level=os.getenv("LOG_LEVEL"))
+    logging.info("log level is " + str(os.getenv("LOG_LEVEL")))
+
     client = get_api_client()
     
     starttime = time.time()
@@ -246,7 +244,7 @@ if __name__ == "__main__":
     # https://stackoverflow.com/a/25251804
     
     while True:
-      logging.debug("tick")
+      logging.info("tick")
       main()
       time.sleep(60.0 - ((time.time() - starttime) % 60.0))
 
