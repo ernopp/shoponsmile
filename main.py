@@ -10,12 +10,10 @@ import coloredlogs, logging
 import time
 from dotenv import load_dotenv # https://pypi.org/project/python-dotenv/
 
-# TODO error handling throughout
-
 def load_env(): 
   load_dotenv()
 
-  coloredlogs.install(level='INFO')
+  coloredlogs.install(level='DEBUG')
 
 def get_api_client():
 
@@ -30,7 +28,8 @@ def get_mentions(client, last_mention_id):
   mentions_endpoint = 'https://api.twitter.com/1.1/statuses/mentions_timeline.json'
 
   # since_id Returns results with an ID greater than (that is, more recent than) the specified ID
-  params = {"since_id" : str(last_mention_id)}
+  # params = {"since_id" : str(last_mention_id)}
+  params = {"since_id" : "1279115660828819457"}
 
   response = client.get(mentions_endpoint, params = params)
 
@@ -54,7 +53,6 @@ def send_tweet(client, text, in_reply_to_status_id):
   params = {"status": text, "in_reply_to_status_id": in_reply_to_status_id}
 
   response = client.post(send_tweet_endpoint, params = params)
-  
   # logging.debug(response.content)
   return json.loads(response.content)
 
@@ -241,7 +239,12 @@ if __name__ == "__main__":
     
     starttime = time.time()
 
+    # RUN WHEN TRIGGERED
+    # main()
+
+    # RUN EVERY MINUTE
     # https://stackoverflow.com/a/25251804
+    
     while True:
       logging.debug("tick")
       main()
