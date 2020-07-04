@@ -221,17 +221,17 @@ def main():
   except Exception as e:
     logging.error(e, exc_info=True)
 
-def test_exceptions():
-  test= {"asd", 123}
+# def test_exceptions():
+#   test= {"asd", 123}
 
-  try:
-    print(test["1414"])
-  except Exception as e:
-  #   print("error")
-  #   traceback.print_exc()
-    logging.error(e, exc_info=True)
+#   try:
+#     print(test["1414"])
+#   except Exception as e:
+#   #   print("error")
+#   #   traceback.print_exc()
+#     logging.error(e, exc_info=True)
 
-    # logging.error('Caught an error' , sys.exc_info()[0])
+#     # logging.error('Caught an error' , sys.exc_info()[0])
 
 if __name__ == "__main__":
     load_env()
