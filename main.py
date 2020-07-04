@@ -8,11 +8,11 @@ import re
 import random
 import coloredlogs, logging
 import time
+from dotenv import load_dotenv # https://pypi.org/project/python-dotenv/
 
 # TODO error handling throughout
 
 def load_env(): 
-  from dotenv import load_dotenv
   load_dotenv()
 
   coloredlogs.install(level='INFO')
@@ -54,9 +54,7 @@ def send_tweet(client, text, in_reply_to_status_id):
   params = {"status": text, "in_reply_to_status_id": in_reply_to_status_id}
 
   response = client.post(send_tweet_endpoint, params = params)
-
-  logging.error("Unexpected error in get_oldest_mention_id_processed: " + sys.exc_info()[0]) 
-
+  
   # logging.debug(response.content)
   return json.loads(response.content)
 
