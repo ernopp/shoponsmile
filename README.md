@@ -8,6 +8,8 @@ Not enough people know that you can shop on smile.amazon.com instead of amazon.c
 
 This is a twitter bot which, if mentioned, will identify amazon links in the mention (and then in the tweet that the mention was a reply to) and reply with smile links 🙂
 
+The bot is written in Python (about 300 lines), authenticated with Twitter app-auth, and deployed on Heroku.
+
 This code is bad (and I feel bad) so please feel free to contribute!
 
 ## Usage 
@@ -22,9 +24,9 @@ This code is bad (and I feel bad) so please feel free to contribute!
 
 **!!! Copy the last mention ID that was processed into `oldest_mention_id.txt` !!!**
 
-Then
-
 (need to fix this)
+
+Then:
 
 ```
 git push heroku master
