@@ -66,9 +66,9 @@ def smilify_url(url):
 
 def reply_to_mention(client, mention_id, username, smilified_urls):
 
-    zero_link_replies = ["Hmmm I couldn't find an Amazon link above...😳. So here's my homepage, friend 💛 smile.amazon.com"]
-    one_link_replies = ["Yes, spot on. Here's your Smile link, friend 💛 ", "I'm HERE for this. Smile links FTW. Here ya go 💛 ", "I concur. You get a Smile link, you get a Smile link. Everyone gets a Smile link 💛", "What a time to be alive. Here's your Smile link, friend 💛 "]
-    multi_link_replies = ["WOAH! Multi-link combo action. Here are your Smile links, friend 💛 "]
+    zero_link_replies = ["Hmmm I couldn't find an Amazon link above...😳. So here's my homepage: smile.amazon.com. Shop from here and 0.5% of your order goes to a charity of your choice 💛"]
+    one_link_replies = ["Yes, spot on. Here's your Smile link, friend. Shop with this one and 0.5% of your order goes to a charity of your choice 💛 ", "I'm HERE for this. Smile links FTW. Shop with this one and 0.5% of your order goes to a charity of your choice. Here ya go 💛 ", "I concur. You get a Smile link, you get a Smile link. Everyone gets a Smile link (through which 0.5% of your order goes to a charity of your choice) 💛", "What a time to be alive. Here's your Smile link, friend. Shop with this one and 0.5% of your order goes to a charity of your choice 💛 "]
+    multi_link_replies = ["WOAH! Multi-link combo action. Here are your Smile links, friend. Shop with these and 0.5% of your order goes to a charity of your choice 💛 "]
 
     if(len(smilified_urls) == 0):
       text = "@" + username + " " + random.choice(zero_link_replies)
