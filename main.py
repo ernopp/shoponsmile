@@ -248,7 +248,7 @@ if __name__ == "__main__":
     while True:
       logging.info("tick")
       main()
-      time.sleep(10.0)
+      time.sleep(20.0)
 
     # send_tweet(client,"@ernopp testingasdasd123 https://www.smile.amazon.com/dp/1442265639/ref=cm_sw_r_cp_api_i_ze19Eb5DRNN42", '1273945165217124352')
 
