@@ -162,7 +162,7 @@ def main():
     logging.info(mentions)
 
     if("errors" in mentions):  
-      logging.error("exiting main with error in mentions " + mentions['errors'])
+      logging.error("exiting main with error in mentions")
       return
 
     # Mentions API returns most recent first. We want to process oldest first. 
