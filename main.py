@@ -153,7 +153,10 @@ def main():
     logging.info("oldest_mention_id_processed is " + str(oldest_mention_id_processed))
 
     mentions = get_mentions(client, oldest_mention_id_processed)
-    
+
+    logging.info("mentions is " + str(mentions))
+    logging.info(mentions)
+
     # Mentions API returns most recent first. We want to process oldest first. 
     mentions.reverse()
 
