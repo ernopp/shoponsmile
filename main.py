@@ -64,18 +64,22 @@ def smilify_url(url):
       smilified_url = ''
       return {"success": False, "smilified_url": smilified_url}
 
-def reply_to_mention(client, mention_id, username, smilified_urls):
+def reply_to_mention(client, mention_id, username_who_mentioned, original_tweet_username, smilified_urls):
 
     zero_link_replies = ["Hmmm I couldn't find an Amazon link above...😳. So here's my homepage: smile.amazon.com. Shop from here and 0.5% of your order goes to a charity of your choice 💛"]
     one_link_replies = ["Yes, spot on. Here's your Smile link, friend. Shop with this one and 0.5% of your order goes to a charity of your choice 💛 ", "I'm HERE for this. Smile links FTW. Shop with this one and 0.5% of your order goes to a charity of your choice. Here ya go 💛 ", "I concur. You get a Smile link, you get a Smile link. Everyone gets a Smile link (through which 0.5% of your order goes to a charity of your choice) 💛", "What a time to be alive. Here's your Smile link, friend. Shop with this one and 0.5% of your order goes to a charity of your choice 💛 "]
     multi_link_replies = ["WOAH! Multi-link combo action. Here are your Smile links, friend. Shop with these and 0.5% of your order goes to a charity of your choice 💛 "]
 
+    original_tweet_username_string = " "
+    if(original_tweet_username is not None):
+      original_tweet_username_string += "@" + str(original_tweet_username) + " "
+
     if(len(smilified_urls) == 0):
-      text = "@" + username + " " + random.choice(zero_link_replies)
+      text = "@" + username_who_mentioned + original_tweet_username_string + random.choice(zero_link_replies)
     elif(len(smilified_urls) == 1):
-      text = "@" + username + " " + random.choice(one_link_replies) + smilified_urls[0]
+      text = "@" + username_who_mentioned + original_tweet_username_string + random.choice(one_link_replies) + smilified_urls[0]
     else:
-      text = "@" + username + " " + random.choice(multi_link_replies)
+      text = "@" + username_who_mentioned + original_tweet_username_string + random.choice(multi_link_replies)
       for s_url in smilified_urls:
         text += s_url + ', '
       text = text[:-2]  
@@ -157,6 +161,10 @@ def main():
     logging.info("mentions is " + str(mentions))
     logging.info(mentions)
 
+    if("errors" in mentions):  
+      logging.error("exiting main with error in mentions " + mentions['errors'])
+      return
+
     # Mentions API returns most recent first. We want to process oldest first. 
     mentions.reverse()
 
@@ -164,6 +172,7 @@ def main():
 
       mention_id = mention["id_str"]
       oldest_mention_id_processed = mention_id
+      original_tweet_username = None
       
       logging.info("\n\n---- PROCESSING MENTION ID: " + mention_id )
       
@@ -176,8 +185,8 @@ def main():
       # Have to do this to get the labs v2 version of the tweet with unwound urls
       mention_tweet = get_tweet(client, mention_id)
 
-      username =  mention['user']['screen_name']
-      logging.debug("------- username that wrote mention is : " + username )
+      username_who_mentioned =  mention['user']['screen_name']
+      logging.debug("------- username that wrote mention is : " + username_who_mentioned )
 
       logging.debug("------- mention text: " + mention['text'])
 
@@ -188,6 +197,8 @@ def main():
       if(original_tweet_id):
       
         #MENTION IS IN REPLY TO A TWEET
+
+        original_tweet_username = mention['in_reply_to_screen_name']
       
         logging.debug("------- mention is reply to original tweet id:  " + original_tweet_id)
 
@@ -210,7 +221,9 @@ def main():
       #dedupe
       smilified_urls = list( dict.fromkeys(smilified_urls) )
       
-      reply_to_mention(client, mention_id, username, smilified_urls)
+      # client, mention_id, username_who_mentioned, original_tweet_username, smilified_urls
+      
+      reply_to_mention(client, mention_id, username_who_mentioned, original_tweet_username, smilified_urls)
 
     logging.info("\n\n Saving oldest_mention_id_processed " + oldest_mention_id_processed)
     save_oldest_mention_id_processed(oldest_mention_id_processed)
@@ -243,12 +256,13 @@ if __name__ == "__main__":
     # RUN WHEN TRIGGERED
     # main()
 
-    # SLEEP 10 SECONDS AFTER EACH RUN
+    # SLEEP 20 SECONDS AFTER EACH RUN
     
     while True:
       logging.info("tick")
       main()
       time.sleep(20.0)
+      # Mentions API rate limit: 75 requests / 15-minutes
 
     # send_tweet(client,"@ernopp testingasdasd123 https://www.smile.amazon.com/dp/1442265639/ref=cm_sw_r_cp_api_i_ze19Eb5DRNN42", '1273945165217124352')
 
