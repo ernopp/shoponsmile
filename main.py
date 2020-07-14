@@ -204,6 +204,10 @@ def main():
 
         original_tweet = get_tweet(client, original_tweet_id)
 
+        if("errors" in original_tweet):
+          logging.info("error retrieving original tweet. Maybe no access. Skipping mention ")
+          continue
+
         logging.debug("------- original tweet text is:  " + str(original_tweet))
         # logging.debug("------- original tweet text is:  " + original_tweet['data'][0]['text'])
 
