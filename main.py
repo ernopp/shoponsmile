@@ -100,7 +100,7 @@ def get_amzn_urls_from_tweet(tweet):
   amzn_urls = []
 
   if("entities" in tweet['data'][0]):  
-    if("urls" in tweet['data'][0]["entities"]):
+    if("urls" in tweet['data'][0]['entities']):
 
       urls = tweet['data'][0]['entities']['urls'] 
       for url in urls:
@@ -204,7 +204,8 @@ def main():
 
         original_tweet = get_tweet(client, original_tweet_id)
 
-        logging.debug("------- original tweet text is:  " + original_tweet["data"][0]["text"])
+        logging.debug("------- original tweet text is:  " + str(original_tweet))
+        # logging.debug("------- original tweet text is:  " + original_tweet['data'][0]['text'])
 
         # GET AMAZON TWEETS FROM ORIGINAL TWEET
         original_tweet_amzn_urls = get_amzn_urls_from_tweet(original_tweet)
