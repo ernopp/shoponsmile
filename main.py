@@ -67,8 +67,8 @@ def smilify_url(url):
 def reply_to_mention(client, mention_id, username_who_mentioned, original_tweet_username, smilified_urls):
 
     zero_link_replies = ["Hmmm I couldn't find an Amazon link above...😳. So here's my homepage: smile.amazon.com. Shop from here and 0.5% of your order goes to a charity of your choice 💛"]
-    one_link_replies = ["Yes, spot on. Here's your Smile link, friend. Shop with this one and 0.5% of your order goes to a charity of your choice 💛 ", "I'm HERE for this. Smile links FTW. Shop with this one and 0.5% of your order goes to a charity of your choice. Here ya go 💛 ", "I concur. You get a Smile link, you get a Smile link. Everyone gets a Smile link (through which 0.5% of your order goes to a charity of your choice) 💛", "What a time to be alive. Here's your Smile link, friend. Shop with this one and 0.5% of your order goes to a charity of your choice 💛 "]
-    multi_link_replies = ["WOAH! Multi-link combo action. Here are your Smile links, friend. Shop with these and 0.5% of your order goes to a charity of your choice 💛 "]
+    one_link_replies = ["Yes, spot on. Here's your AmazonSmile link: shop with this one and 0.5% of your order goes to a charity of your choice (you pay the same) 💛 ", "AmazonSmile link FTW. Shop with this link and 0.5% of your order goes to a charity of your choice (you pay the same). Here ya go 💛 ", "I concur. You get a Smile link, you get a Smile link. Everyone gets a Smile link (through which 0.5% of your order goes to a charity of your choice) 💛", "What a time to be alive. Here's your AmazonSmile link. Shop with this one and 0.5% of your order goes to a charity of your choice (you pay the same) 💛 "]
+    multi_link_replies = ["WOAH! Multi-link combo action. Here are your AmazonSmile links, friend. Shop with these and 0.5% of your order goes to a charity of your choice 💛 "]
 
     original_tweet_username_string = " "
     if(original_tweet_username is not None):
