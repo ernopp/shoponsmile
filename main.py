@@ -27,7 +27,7 @@ def get_mentions(client, last_mention_id):
 
   response = client.get(mentions_endpoint, params = params)
 
-  logging.debug('mentions api call response ' + str(response))
+  logging.debug('mentions api call response ' + str(json.loads(response)))
 
   return json.loads(response.content)
 
